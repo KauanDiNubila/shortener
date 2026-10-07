@@ -110,7 +110,7 @@ class LinkControllerTest {
 	@Test
 	void redirecionaCom302ParaAUrlOriginal() throws Exception {
 		Link link = new Link("aB3x9Kq", "https://exemplo.com/artigo?id=7", null);
-		when(service.buscarParaRedirecionar("aB3x9Kq")).thenReturn(link);
+		when(service.redirecionar("aB3x9Kq")).thenReturn(link);
 
 		mockMvc.perform(get("/aB3x9Kq"))
 				.andExpect(status().isFound())
@@ -121,7 +121,7 @@ class LinkControllerTest {
 
 	@Test
 	void devolve404QuandoOCodigoNaoExiste() throws Exception {
-		when(service.buscarParaRedirecionar("naoExiste")).thenThrow(new LinkNaoEncontradoException("naoExiste"));
+		when(service.redirecionar("naoExiste")).thenThrow(new LinkNaoEncontradoException("naoExiste"));
 
 		mockMvc.perform(get("/naoExiste"))
 				.andExpect(status().isNotFound())
@@ -131,7 +131,7 @@ class LinkControllerTest {
 
 	@Test
 	void devolve410QuandoOLinkExpirou() throws Exception {
-		when(service.buscarParaRedirecionar("velho12")).thenThrow(new LinkExpiradoException("velho12"));
+		when(service.redirecionar("velho12")).thenThrow(new LinkExpiradoException("velho12"));
 
 		mockMvc.perform(get("/velho12"))
 				.andExpect(status().isGone())

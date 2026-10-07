@@ -57,6 +57,26 @@ class LinkApiIntegrationTest {
 	}
 
 	@Test
+	void cadaVisitaAoLinkCurtoSomaUmClique() throws Exception {
+		String codigo = criarLink("https://exemplo.com/visitado");
+		assertThat(repository.findByCodigo(codigo).orElseThrow().getCliques()).isZero();
+
+		mockMvc.perform(get("/" + codigo)).andExpect(status().isFound());
+		mockMvc.perform(get("/" + codigo)).andExpect(status().isFound());
+
+		assertThat(repository.findByCodigo(codigo).orElseThrow().getCliques()).isEqualTo(2);
+	}
+
+	@Test
+	void visitaAUmLinkExpiradoNaoSomaClique() throws Exception {
+		repository.saveAndFlush(new Link("expcont", "https://exemplo.com/velho", Instant.now().minusSeconds(60)));
+
+		mockMvc.perform(get("/expcont")).andExpect(status().isGone());
+
+		assertThat(repository.findByCodigo("expcont").orElseThrow().getCliques()).isZero();
+	}
+
+	@Test
 	void aMesmaUrlGeraCodigosDiferentes() throws Exception {
 		String primeiro = criarLink("https://exemplo.com/repetida");
 		String segundo = criarLink("https://exemplo.com/repetida");

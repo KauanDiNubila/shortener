@@ -35,13 +35,15 @@ public class LinkService {
 		throw new CodigoIndisponivelException(MAX_TENTATIVAS);
 	}
 
-	public Link buscarParaRedirecionar(String codigo) {
+	public Link redirecionar(String codigo) {
 		Link link = repository.findByCodigo(codigo)
 				.orElseThrow(() -> new LinkNaoEncontradoException(codigo));
 
 		if (link.estaExpirado(clock.instant())) {
 			throw new LinkExpiradoException(codigo);
 		}
+
+		repository.incrementarCliques(codigo);
 		return link;
 	}
 }

@@ -20,6 +20,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -81,11 +82,42 @@ class LinkServiceTest {
 	}
 
 	@Test
+	void contaUmCliqueQuandoORedirecionamentoEhValido() {
+		Link link = new Link("aB3x9Kq", "https://exemplo.com", null);
+		when(repository.findByCodigo("aB3x9Kq")).thenReturn(Optional.of(link));
+
+		service.redirecionar("aB3x9Kq");
+
+		verify(repository, times(1)).incrementarCliques("aB3x9Kq");
+	}
+
+	@Test
+	void naoContaCliqueQuandoOCodigoNaoExiste() {
+		when(repository.findByCodigo("naoExiste")).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.redirecionar("naoExiste"))
+				.isInstanceOf(LinkNaoEncontradoException.class);
+
+		verify(repository, never()).incrementarCliques(any());
+	}
+
+	@Test
+	void naoContaCliqueQuandoOLinkExpirou() {
+		Link link = new Link("velho12", "https://exemplo.com", AGORA.minusSeconds(1));
+		when(repository.findByCodigo("velho12")).thenReturn(Optional.of(link));
+
+		assertThatThrownBy(() -> service.redirecionar("velho12"))
+				.isInstanceOf(LinkExpiradoException.class);
+
+		verify(repository, never()).incrementarCliques(any());
+	}
+
+	@Test
 	void devolveOLinkQuandoNaoTemExpiracao() {
 		Link link = new Link("aB3x9Kq", "https://exemplo.com", null);
 		when(repository.findByCodigo("aB3x9Kq")).thenReturn(Optional.of(link));
 
-		assertThat(service.buscarParaRedirecionar("aB3x9Kq")).isSameAs(link);
+		assertThat(service.redirecionar("aB3x9Kq")).isSameAs(link);
 	}
 
 	@Test
@@ -93,14 +125,14 @@ class LinkServiceTest {
 		Link link = new Link("aB3x9Kq", "https://exemplo.com", AGORA.plusSeconds(1));
 		when(repository.findByCodigo("aB3x9Kq")).thenReturn(Optional.of(link));
 
-		assertThat(service.buscarParaRedirecionar("aB3x9Kq")).isSameAs(link);
+		assertThat(service.redirecionar("aB3x9Kq")).isSameAs(link);
 	}
 
 	@Test
 	void lancaNaoEncontradoQuandoOCodigoNaoExiste() {
 		when(repository.findByCodigo("naoExiste")).thenReturn(Optional.empty());
 
-		assertThatThrownBy(() -> service.buscarParaRedirecionar("naoExiste"))
+		assertThatThrownBy(() -> service.redirecionar("naoExiste"))
 				.isInstanceOf(LinkNaoEncontradoException.class)
 				.hasMessageContaining("naoExiste");
 	}
@@ -110,7 +142,7 @@ class LinkServiceTest {
 		Link link = new Link("velho12", "https://exemplo.com", AGORA.minusSeconds(1));
 		when(repository.findByCodigo("velho12")).thenReturn(Optional.of(link));
 
-		assertThatThrownBy(() -> service.buscarParaRedirecionar("velho12"))
+		assertThatThrownBy(() -> service.redirecionar("velho12"))
 				.isInstanceOf(LinkExpiradoException.class)
 				.hasMessageContaining("velho12");
 	}
@@ -120,7 +152,7 @@ class LinkServiceTest {
 		Link link = new Link("limite1", "https://exemplo.com", AGORA);
 		when(repository.findByCodigo("limite1")).thenReturn(Optional.of(link));
 
-		assertThatThrownBy(() -> service.buscarParaRedirecionar("limite1"))
+		assertThatThrownBy(() -> service.redirecionar("limite1"))
 				.isInstanceOf(LinkExpiradoException.class);
 	}
 }

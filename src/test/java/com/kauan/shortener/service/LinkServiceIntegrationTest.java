@@ -47,22 +47,42 @@ class LinkServiceIntegrationTest {
 	void buscaUmLinkValidoNoBanco() {
 		repository.saveAndFlush(new Link("valido1", "https://exemplo.com/valido", Instant.now().plusSeconds(3600)));
 
-		Link encontrado = service.buscarParaRedirecionar("valido1");
+		Link encontrado = service.redirecionar("valido1");
 
 		assertThat(encontrado.getUrlOriginal()).isEqualTo("https://exemplo.com/valido");
+	}
+
+	@Test
+	void cadaRedirecionamentoValidoSomaUmCliqueNoBanco() {
+		repository.saveAndFlush(new Link("contado", "https://exemplo.com/contado", null));
+
+		service.redirecionar("contado");
+		service.redirecionar("contado");
+		service.redirecionar("contado");
+
+		assertThat(repository.findByCodigo("contado").orElseThrow().getCliques()).isEqualTo(3);
+	}
+
+	@Test
+	void redirecionamentoRecusadoNaoContaClique() {
+		repository.saveAndFlush(new Link("semclic", "https://exemplo.com/velho", Instant.now().minusSeconds(3600)));
+
+		assertThatThrownBy(() -> service.redirecionar("semclic")).isInstanceOf(LinkExpiradoException.class);
+
+		assertThat(repository.findByCodigo("semclic").orElseThrow().getCliques()).isZero();
 	}
 
 	@Test
 	void recusaUmLinkExpiradoNoBanco() {
 		repository.saveAndFlush(new Link("velho99", "https://exemplo.com/velho", Instant.now().minusSeconds(3600)));
 
-		assertThatThrownBy(() -> service.buscarParaRedirecionar("velho99"))
+		assertThatThrownBy(() -> service.redirecionar("velho99"))
 				.isInstanceOf(LinkExpiradoException.class);
 	}
 
 	@Test
 	void recusaUmCodigoQueNaoExisteNoBanco() {
-		assertThatThrownBy(() -> service.buscarParaRedirecionar("fantasm"))
+		assertThatThrownBy(() -> service.redirecionar("fantasm"))
 				.isInstanceOf(LinkNaoEncontradoException.class);
 	}
 }

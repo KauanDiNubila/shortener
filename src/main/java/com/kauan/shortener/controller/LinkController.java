@@ -38,7 +38,7 @@ public class LinkController {
 
 	@GetMapping("/{codigo:[A-Za-z0-9_-]{1,32}}")
 	public ResponseEntity<Void> redirecionar(@PathVariable String codigo) {
-		Link link = service.buscarParaRedirecionar(codigo);
+		Link link = service.redirecionar(codigo);
 
 		return ResponseEntity.status(HttpStatus.FOUND)
 				.location(URI.create(link.getUrlOriginal()))
