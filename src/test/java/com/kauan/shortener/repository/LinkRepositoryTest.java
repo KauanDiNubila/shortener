@@ -39,6 +39,35 @@ class LinkRepositoryTest {
 	}
 
 	@Test
+	void incrementarCliquesSomaUmEDevolveQuantasLinhasMudaram() {
+		repository.saveAndFlush(new Link("conta01", "https://exemplo.com", null));
+
+		int linhas = repository.incrementarCliques("conta01");
+		repository.incrementarCliques("conta01");
+		entityManager.clear();
+
+		assertThat(linhas).isEqualTo(1);
+		assertThat(repository.findByCodigo("conta01").orElseThrow().getCliques()).isEqualTo(2);
+	}
+
+	@Test
+	void incrementarCliquesDeUmCodigoInexistenteNaoMudaNada() {
+		assertThat(repository.incrementarCliques("fantasm")).isZero();
+	}
+
+	@Test
+	void incrementarCliquesNaoMexeNosOutrosLinks() {
+		repository.saveAndFlush(new Link("alvo001", "https://exemplo.com/a", null));
+		repository.saveAndFlush(new Link("outro01", "https://exemplo.com/b", null));
+
+		repository.incrementarCliques("alvo001");
+		entityManager.clear();
+
+		assertThat(repository.findByCodigo("alvo001").orElseThrow().getCliques()).isEqualTo(1);
+		assertThat(repository.findByCodigo("outro01").orElseThrow().getCliques()).isZero();
+	}
+
+	@Test
 	void salvaELeLinkPeloCodigo() {
 		repository.saveAndFlush(new Link("aB3x9Kq", "https://exemplo.com/artigo", null));
 
