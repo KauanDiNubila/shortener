@@ -1,5 +1,6 @@
-package com.kauan.shortener.link;
+package com.kauan.shortener.repository;
 
+import com.kauan.shortener.entity.Link;
 import com.kauan.shortener.TestcontainersConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

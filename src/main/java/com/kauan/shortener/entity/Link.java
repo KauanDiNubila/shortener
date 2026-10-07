@@ -1,4 +1,4 @@
-package com.kauan.shortener.link;
+package com.kauan.shortener.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

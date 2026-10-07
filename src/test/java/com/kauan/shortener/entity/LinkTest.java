@@ -1,4 +1,4 @@
-package com.kauan.shortener.link;
+package com.kauan.shortener.entity;
 
 import org.junit.jupiter.api.Test;
 

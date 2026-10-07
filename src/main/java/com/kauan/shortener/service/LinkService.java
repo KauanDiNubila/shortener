@@ -1,5 +1,8 @@
-package com.kauan.shortener.link;
+package com.kauan.shortener.service;
 
+import com.kauan.shortener.entity.Link;
+import com.kauan.shortener.exception.CodigoIndisponivelException;
+import com.kauan.shortener.repository.LinkRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;

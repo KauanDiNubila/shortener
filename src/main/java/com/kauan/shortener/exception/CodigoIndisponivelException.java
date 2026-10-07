@@ -1,4 +1,4 @@
-package com.kauan.shortener.link;
+package com.kauan.shortener.exception;
 
 public class CodigoIndisponivelException extends RuntimeException {
 
