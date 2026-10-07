@@ -1,0 +1,30 @@
+package com.kauan.shortener.link;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class LinkService {
+
+	static final int MAX_TENTATIVAS = 5;
+
+	private final LinkRepository repository;
+	private final GeradorDeCodigo gerador;
+
+	public Link criar(String urlOriginal, Instant expiraEm) {
+		for (int tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+			try {
+				return repository.saveAndFlush(new Link(gerador.gerar(), urlOriginal, expiraEm));
+			} catch (DataIntegrityViolationException e) {
+				log.warn("Colisão de código na tentativa {} de {}", tentativa, MAX_TENTATIVAS);
+			}
+		}
+		throw new CodigoIndisponivelException(MAX_TENTATIVAS);
+	}
+}
