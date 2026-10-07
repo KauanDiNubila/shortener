@@ -148,6 +148,43 @@ class LinkServiceTest {
 	}
 
 	@Test
+	void consultarDevolveOLinkSemContarClique() {
+		Link link = new Link("aB3x9Kq", "https://exemplo.com", null);
+		when(repository.findByCodigo("aB3x9Kq")).thenReturn(Optional.of(link));
+
+		assertThat(service.consultar("aB3x9Kq")).isSameAs(link);
+
+		verify(repository, never()).incrementarCliques(any());
+	}
+
+	@Test
+	void consultarDevolveTambemUmLinkExpirado() {
+		Link link = new Link("velho12", "https://exemplo.com", AGORA.minusSeconds(1));
+		when(repository.findByCodigo("velho12")).thenReturn(Optional.of(link));
+
+		assertThat(service.consultar("velho12")).isSameAs(link);
+	}
+
+	@Test
+	void consultarLancaNaoEncontradoQuandoOCodigoNaoExiste() {
+		when(repository.findByCodigo("naoExiste")).thenReturn(Optional.empty());
+
+		assertThatThrownBy(() -> service.consultar("naoExiste"))
+				.isInstanceOf(LinkNaoEncontradoException.class);
+	}
+
+	@Test
+	void estaExpiradoUsaORelogioInjetado() {
+		Link expirado = new Link("velho12", "https://exemplo.com", AGORA.minusSeconds(1));
+		Link valido = new Link("novo123", "https://exemplo.com", AGORA.plusSeconds(1));
+		Link semExpiracao = new Link("eterno1", "https://exemplo.com", null);
+
+		assertThat(service.estaExpirado(expirado)).isTrue();
+		assertThat(service.estaExpirado(valido)).isFalse();
+		assertThat(service.estaExpirado(semExpiracao)).isFalse();
+	}
+
+	@Test
 	void lancaExpiradoNoExatoInstanteDaExpiracao() {
 		Link link = new Link("limite1", "https://exemplo.com", AGORA);
 		when(repository.findByCodigo("limite1")).thenReturn(Optional.of(link));

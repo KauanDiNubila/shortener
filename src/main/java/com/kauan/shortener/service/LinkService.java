@@ -36,14 +36,26 @@ public class LinkService {
 	}
 
 	public Link redirecionar(String codigo) {
-		Link link = repository.findByCodigo(codigo)
-				.orElseThrow(() -> new LinkNaoEncontradoException(codigo));
+		Link link = buscar(codigo);
 
-		if (link.estaExpirado(clock.instant())) {
+		if (estaExpirado(link)) {
 			throw new LinkExpiradoException(codigo);
 		}
 
 		repository.incrementarCliques(codigo);
 		return link;
+	}
+
+	public Link consultar(String codigo) {
+		return buscar(codigo);
+	}
+
+	public boolean estaExpirado(Link link) {
+		return link.estaExpirado(clock.instant());
+	}
+
+	private Link buscar(String codigo) {
+		return repository.findByCodigo(codigo)
+				.orElseThrow(() -> new LinkNaoEncontradoException(codigo));
 	}
 }

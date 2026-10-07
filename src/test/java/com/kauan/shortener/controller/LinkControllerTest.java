@@ -11,11 +11,13 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -137,6 +139,46 @@ class LinkControllerTest {
 				.andExpect(status().isGone())
 				.andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
 				.andExpect(jsonPath("$.title").value("Link expirado"));
+	}
+
+	@Test
+	void consultaOsDadosDoLinkIncluindoOsCliques() throws Exception {
+		Instant expiracao = Instant.parse("2030-01-01T00:00:00Z");
+		Link link = new Link("aB3x9Kq", "https://exemplo.com/artigo", expiracao);
+		ReflectionTestUtils.setField(link, "cliques", 42L);
+		when(service.consultar("aB3x9Kq")).thenReturn(link);
+		when(service.estaExpirado(link)).thenReturn(false);
+
+		mockMvc.perform(get("/links/aB3x9Kq"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.codigo").value("aB3x9Kq"))
+				.andExpect(jsonPath("$.urlCurta").value("http://localhost/aB3x9Kq"))
+				.andExpect(jsonPath("$.urlOriginal").value("https://exemplo.com/artigo"))
+				.andExpect(jsonPath("$.expiraEm").value("2030-01-01T00:00:00Z"))
+				.andExpect(jsonPath("$.expirado").value(false))
+				.andExpect(jsonPath("$.cliques").value(42));
+
+		verify(service, never()).redirecionar(any());
+	}
+
+	@Test
+	void consultaMostraQueOLinkExpirou() throws Exception {
+		Link link = new Link("velho12", "https://exemplo.com", Instant.parse("2020-01-01T00:00:00Z"));
+		when(service.consultar("velho12")).thenReturn(link);
+		when(service.estaExpirado(link)).thenReturn(true);
+
+		mockMvc.perform(get("/links/velho12"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.expirado").value(true));
+	}
+
+	@Test
+	void consultaDevolve404QuandoOCodigoNaoExiste() throws Exception {
+		when(service.consultar("naoExiste")).thenThrow(new LinkNaoEncontradoException("naoExiste"));
+
+		mockMvc.perform(get("/links/naoExiste"))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.title").value("Link não encontrado"));
 	}
 
 	@Test
