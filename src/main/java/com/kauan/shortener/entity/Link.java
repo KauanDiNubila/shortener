@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "links")
@@ -40,7 +41,7 @@ public class Link {
 		this.codigo = codigo;
 		this.urlOriginal = urlOriginal;
 		this.expiraEm = expiraEm;
-		this.criadoEm = Instant.now();
+		this.criadoEm = Instant.now().truncatedTo(ChronoUnit.MICROS);
 	}
 
 	public boolean estaExpirado(Instant agora) {

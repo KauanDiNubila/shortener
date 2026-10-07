@@ -1,7 +1,8 @@
 package com.kauan.shortener.repository;
 
-import com.kauan.shortener.entity.Link;
 import com.kauan.shortener.TestcontainersConfiguration;
+import com.kauan.shortener.entity.Link;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -21,6 +22,21 @@ class LinkRepositoryTest {
 
 	@Autowired
 	private LinkRepository repository;
+
+	@Autowired
+	private EntityManager entityManager;
+
+	@Test
+	void dataDeCriacaoSobreviveAoRoundTripSemPerderPrecisao() {
+		Link salvo = repository.saveAndFlush(new Link("precis1", "https://exemplo.com", null));
+		Instant criadoEmAntes = salvo.getCriadoEm();
+		entityManager.clear();
+
+		Link relido = repository.findByCodigo("precis1").orElseThrow();
+
+		assertThat(relido).isNotSameAs(salvo);
+		assertThat(relido.getCriadoEm()).isEqualTo(criadoEmAntes);
+	}
 
 	@Test
 	void salvaELeLinkPeloCodigo() {
