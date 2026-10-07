@@ -1,6 +1,14 @@
 spring:
   application:
     name: shortener
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/shortener}
+    username: ${DB_USER:shortener}
+    password: ${DB_PASSWORD:shortener}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
 
 management:
   endpoints:
